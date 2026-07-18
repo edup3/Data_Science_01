@@ -1,8 +1,10 @@
 """
-Dashboard de Calificaciones Escolares
---------------------------------------
-Simula 1000 registros de calificaciones de un colegio y presenta un
-análisis gráfico interactivo utilizando Streamlit + Plotly.
+Dashboard de Jugadores - Liga Colombiana de Fútbol
+----------------------------------------------------
+Simula 1000 registros de jugadores de la Liga BetPlay (Colombia) y presenta
+un análisis gráfico interactivo con Streamlit + Plotly.
+
+El dashboard está protegido con una clave de acceso.
 
 Ejecutar con:
     streamlit run main.py
@@ -18,11 +20,43 @@ import streamlit as st
 # Configuración general de la página
 # ---------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Dashboard de Calificaciones Escolares",
-    page_icon="🎓",
+    page_title="Dashboard Liga Colombiana de Fútbol",
+    page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# ---------------------------------------------------------------------------
+# Autenticación por clave de acceso
+# ---------------------------------------------------------------------------
+CLAVE_ACCESO = "1234"
+
+if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
+
+if not st.session_state.autenticado:
+    st.title("🔒 Acceso al Dashboard")
+    st.caption("Dashboard de jugadores de la Liga Colombiana de Fútbol")
+
+    with st.form("form_login"):
+        clave_ingresada = st.text_input("Ingresa la clave de acceso", type="password")
+        enviar = st.form_submit_button("Ingresar")
+
+    if enviar:
+        if clave_ingresada == CLAVE_ACCESO:
+            st.session_state.autenticado = True
+            st.rerun()
+        else:
+            st.error("Clave incorrecta. Inténtalo de nuevo.")
+
+    st.stop()
+
+# Botón de cierre de sesión (visible una vez autenticado)
+with st.sidebar:
+    if st.button("🔓 Cerrar sesión"):
+        st.session_state.autenticado = False
+        st.rerun()
+    st.markdown("---")
 
 # ---------------------------------------------------------------------------
 # Simulación de datos (1000 registros, 10 columnas)
@@ -32,72 +66,80 @@ def generar_datos(n: int = 1000, seed: int = 42) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
 
     nombres = [
-        "Mateo", "Sofía", "Samuel", "Isabella", "Juan José", "Valentina",
-        "Santiago", "Mariana", "Emiliano", "Luciana", "Tomás", "Camila",
-        "Nicolás", "Salomé", "Andrés", "Gabriela", "Sebastián", "Antonella",
-        "David", "Renata",
+        "Juan", "Carlos", "Andrés", "Santiago", "Camilo", "Jefferson",
+        "Yerson", "Sebastián", "Cristian", "Deiver", "Rafael", "Dayro",
+        "Marino", "Wilder", "Jhon", "Fabián", "Duván", "Luis", "Miguel",
+        "Alexander",
     ]
     apellidos = [
-        "Gómez", "Rodríguez", "Martínez", "López", "García", "Pérez",
-        "Sánchez", "Ramírez", "Torres", "Flórez", "Vargas", "Castro",
-        "Ortiz", "Rojas", "Moreno", "Suárez",
+        "Rodríguez", "Martínez", "Gómez", "Hernández", "González", "Díaz",
+        "Ramírez", "Torres", "Moreno", "Muñoz", "Valencia", "Mosquera",
+        "Cuesta", "Perea", "Arias", "Bonilla", "Cárdenas", "Zapata",
+        "Palacios", "Riascos",
     ]
 
-    grados = ["6°", "7°", "8°", "9°", "10°", "11°"]
-    secciones = ["A", "B", "C"]
-    materias = [
-        "Matemáticas", "Ciencias Naturales", "Lengua Castellana",
-        "Ciencias Sociales", "Inglés", "Educación Física", "Artística",
-        "Tecnología",
+    equipos = [
+        "Atlético Nacional", "Millonarios", "América de Cali", "Junior",
+        "Deportivo Cali", "Independiente Santa Fe", "Once Caldas",
+        "Deportivo Pereira", "Atlético Bucaramanga", "Envigado",
+        "La Equidad", "Águilas Doradas", "Deportes Tolima",
+        "Alianza Petrolera", "Boyacá Chicó", "Independiente Medellín",
     ]
-    generos = ["Masculino", "Femenino"]
-    periodos = ["Periodo 1", "Periodo 2", "Periodo 3", "Periodo 4"]
 
-    # Sesgos leves por materia y periodo para que el análisis sea interesante
-    sesgo_materia = {
-        "Matemáticas": -0.25, "Ciencias Naturales": -0.1,
-        "Lengua Castellana": 0.05, "Ciencias Sociales": 0.1,
-        "Inglés": -0.05, "Educación Física": 0.35,
-        "Artística": 0.3, "Tecnología": 0.15,
-    }
-    sesgo_periodo = {
-        "Periodo 1": -0.1, "Periodo 2": 0.0,
-        "Periodo 3": 0.05, "Periodo 4": 0.15,
-    }
+    posiciones = ["Portero", "Defensa", "Mediocampista", "Delantero"]
+    pesos_posicion = [0.10, 0.30, 0.35, 0.25]
 
     filas = []
     for i in range(1, n + 1):
-        grado = rng.choice(grados)
-        seccion = rng.choice(secciones)
-        materia = rng.choice(materias)
-        periodo = rng.choice(periodos)
-        genero = rng.choice(generos)
-        horas_estudio = float(np.clip(rng.normal(6, 2.5), 0, 20))
-
-        base = rng.normal(3.7, 0.6)
-        efecto_estudio = (horas_estudio - 6) * 0.03
-        calificacion = (
-            base
-            + sesgo_materia[materia]
-            + sesgo_periodo[periodo]
-            + efecto_estudio
+        equipo = rng.choice(equipos)
+        posicion = rng.choice(posiciones, p=pesos_posicion)
+        edad = int(np.clip(rng.normal(25, 4.5), 17, 39))
+        partidos_jugados = int(np.clip(rng.normal(22, 8), 0, 38))
+        minutos_jugados = int(
+            np.clip(partidos_jugados * rng.normal(75, 15), 0, 38 * 90)
         )
-        calificacion = float(np.clip(calificacion, 0.5, 5.0))
 
-        asistencia = float(np.clip(rng.normal(90, 8), 40, 100))
+        # Goles y asistencias según posición
+        if posicion == "Delantero":
+            goles = int(np.clip(rng.poisson(0.45 * partidos_jugados / 3), 0, 30))
+            asistencias = int(np.clip(rng.poisson(0.15 * partidos_jugados / 3), 0, 15))
+        elif posicion == "Mediocampista":
+            goles = int(np.clip(rng.poisson(0.15 * partidos_jugados / 3), 0, 15))
+            asistencias = int(np.clip(rng.poisson(0.25 * partidos_jugados / 3), 0, 18))
+        elif posicion == "Defensa":
+            goles = int(np.clip(rng.poisson(0.05 * partidos_jugados / 3), 0, 8))
+            asistencias = int(np.clip(rng.poisson(0.08 * partidos_jugados / 3), 0, 10))
+        else:  # Portero
+            goles = 0
+            asistencias = int(np.clip(rng.poisson(0.02 * partidos_jugados / 3), 0, 2))
+
+        # Valor de mercado (USD): influenciado por edad, goles, asistencias
+        pico_edad = 26
+        factor_edad = np.exp(-((edad - pico_edad) ** 2) / (2 * 6 ** 2))
+        base_valor = rng.normal(350_000, 150_000)
+        valor_mercado = (
+            base_valor * (0.6 + 0.4 * factor_edad)
+            + goles * 25_000
+            + asistencias * 15_000
+            + minutos_jugados * 200
+        )
+        valor_mercado = int(np.clip(valor_mercado, 50_000, 8_000_000))
+
+        tarjetas_amarillas = int(np.clip(rng.poisson(0.12 * partidos_jugados), 0, 15))
+        tarjetas_rojas = int(rng.choice([0, 0, 0, 0, 1], p=[0.75, 0.1, 0.08, 0.05, 0.02]))
 
         filas.append(
             {
-                "id_estudiante": i,
+                "id_jugador": i,
                 "nombre": f"{rng.choice(nombres)} {rng.choice(apellidos)}",
-                "grado": grado,
-                "seccion": seccion,
-                "materia": materia,
-                "periodo": periodo,
-                "genero": genero,
-                "calificacion": round(calificacion, 1),
-                "asistencia_%": round(asistencia, 1),
-                "horas_estudio_semanal": round(horas_estudio, 1),
+                "equipo": equipo,
+                "posicion": posicion,
+                "edad": edad,
+                "partidos_jugados": partidos_jugados,
+                "minutos_jugados": minutos_jugados,
+                "goles": goles,
+                "asistencias": asistencias,
+                "valor_mercado_usd": valor_mercado,
             }
         )
 
@@ -110,27 +152,24 @@ df = generar_datos()
 # ---------------------------------------------------------------------------
 # Sidebar - Filtros
 # ---------------------------------------------------------------------------
-st.sidebar.title("🎓 Filtros")
-st.sidebar.caption("Filtra el conjunto de datos simulado del colegio.")
+st.sidebar.title("⚽ Filtros")
+st.sidebar.caption("Filtra el conjunto de datos simulado de la Liga Colombiana.")
 
-grados_sel = st.sidebar.multiselect(
-    "Grado", sorted(df["grado"].unique()), default=sorted(df["grado"].unique())
+equipos_sel = st.sidebar.multiselect(
+    "Equipo", sorted(df["equipo"].unique()), default=sorted(df["equipo"].unique())
 )
-materias_sel = st.sidebar.multiselect(
-    "Materia", sorted(df["materia"].unique()), default=sorted(df["materia"].unique())
+posiciones_sel = st.sidebar.multiselect(
+    "Posición", sorted(df["posicion"].unique()), default=sorted(df["posicion"].unique())
 )
-periodos_sel = st.sidebar.multiselect(
-    "Periodo", sorted(df["periodo"].unique()), default=sorted(df["periodo"].unique())
-)
-genero_sel = st.sidebar.multiselect(
-    "Género", sorted(df["genero"].unique()), default=sorted(df["genero"].unique())
+edad_min, edad_max = int(df["edad"].min()), int(df["edad"].max())
+rango_edad = st.sidebar.slider(
+    "Rango de edad", edad_min, edad_max, (edad_min, edad_max)
 )
 
 df_filtrado = df[
-    df["grado"].isin(grados_sel)
-    & df["materia"].isin(materias_sel)
-    & df["periodo"].isin(periodos_sel)
-    & df["genero"].isin(genero_sel)
+    df["equipo"].isin(equipos_sel)
+    & df["posicion"].isin(posiciones_sel)
+    & df["edad"].between(rango_edad[0], rango_edad[1])
 ]
 
 st.sidebar.markdown("---")
@@ -142,10 +181,10 @@ with st.sidebar.expander("Ver datos crudos"):
 # ---------------------------------------------------------------------------
 # Encabezado y KPIs
 # ---------------------------------------------------------------------------
-st.title("🎓 Dashboard de Calificaciones Escolares")
+st.title("⚽ Dashboard Liga Colombiana de Fútbol")
 st.caption(
-    "Datos simulados de 1000 registros académicos. Usa los filtros de la "
-    "barra lateral para explorar el conjunto de datos."
+    "Datos simulados de 1000 jugadores. Usa los filtros de la barra lateral "
+    "para explorar el conjunto de datos."
 )
 
 if df_filtrado.empty:
@@ -153,129 +192,126 @@ if df_filtrado.empty:
     st.stop()
 
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Promedio general", f"{df_filtrado['calificacion'].mean():.2f}")
-col2.metric("Asistencia promedio", f"{df_filtrado['asistencia_%'].mean():.1f}%")
-col3.metric(
-    "Horas de estudio prom.", f"{df_filtrado['horas_estudio_semanal'].mean():.1f} h"
-)
+col1.metric("Total goles", f"{df_filtrado['goles'].sum():,}")
+col2.metric("Total asistencias", f"{df_filtrado['asistencias'].sum():,}")
+col3.metric("Edad promedio", f"{df_filtrado['edad'].mean():.1f} años")
 col4.metric(
-    "% Aprobación (≥3.0)",
-    f"{(df_filtrado['calificacion'] >= 3.0).mean() * 100:.1f}%",
+    "Valor de mercado promedio", f"${df_filtrado['valor_mercado_usd'].mean():,.0f}"
 )
 
 st.markdown("---")
 
 # ---------------------------------------------------------------------------
-# Fila 1: Distribución de calificaciones + Boxplot por materia
+# Fila 1: Distribución de goles + Boxplot por posición
 # ---------------------------------------------------------------------------
 c1, c2 = st.columns(2)
 
 with c1:
-    st.subheader("Distribución de calificaciones")
+    st.subheader("Distribución de goles")
     fig_hist = px.histogram(
         df_filtrado,
-        x="calificacion",
-        nbins=25,
-        color="genero",
+        x="goles",
+        nbins=20,
+        color="posicion",
         marginal="box",
         opacity=0.8,
         color_discrete_sequence=px.colors.qualitative.Set2,
     )
     fig_hist.update_layout(
-        xaxis_title="Calificación", yaxis_title="Cantidad de estudiantes",
-        legend_title="Género", bargap=0.05,
+        xaxis_title="Goles", yaxis_title="Cantidad de jugadores",
+        legend_title="Posición", bargap=0.05,
     )
     st.plotly_chart(fig_hist, use_container_width=True)
 
 with c2:
-    st.subheader("Calificaciones por materia")
+    st.subheader("Minutos jugados por posición")
     fig_box = px.box(
         df_filtrado,
-        x="materia",
-        y="calificacion",
-        color="materia",
+        x="posicion",
+        y="minutos_jugados",
+        color="posicion",
         points="outliers",
         color_discrete_sequence=px.colors.qualitative.Set3,
     )
     fig_box.update_layout(
-        xaxis_title="Materia", yaxis_title="Calificación", showlegend=False
+        xaxis_title="Posición", yaxis_title="Minutos jugados", showlegend=False
     )
-    fig_box.update_xaxes(tickangle=-30)
     st.plotly_chart(fig_box, use_container_width=True)
 
 # ---------------------------------------------------------------------------
-# Fila 2: Promedio por grado + Evolución por periodo
+# Fila 2: Top goleadores + Valor de mercado por equipo
 # ---------------------------------------------------------------------------
 c3, c4 = st.columns(2)
 
 with c3:
-    st.subheader("Promedio de calificación por grado")
-    prom_grado = (
-        df_filtrado.groupby("grado", as_index=False)["calificacion"]
-        .mean()
-        .sort_values("grado")
-    )
+    st.subheader("Top 10 goleadores")
+    top_goleadores = df_filtrado.nlargest(10, "goles")[
+        ["nombre", "equipo", "goles"]
+    ].sort_values("goles")
     fig_bar = px.bar(
-        prom_grado,
-        x="grado",
-        y="calificacion",
-        color="calificacion",
-        color_continuous_scale="Tealgrn",
-        text_auto=".2f",
+        top_goleadores,
+        x="goles",
+        y="nombre",
+        color="goles",
+        orientation="h",
+        color_continuous_scale="Reds",
+        text="equipo",
     )
     fig_bar.update_layout(
-        xaxis_title="Grado", yaxis_title="Calificación promedio",
-        coloraxis_showscale=False,
+        xaxis_title="Goles", yaxis_title="", coloraxis_showscale=False
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
 with c4:
-    st.subheader("Evolución del promedio por periodo")
-    prom_periodo = (
-        df_filtrado.groupby(["periodo", "materia"], as_index=False)["calificacion"]
+    st.subheader("Valor de mercado promedio por equipo")
+    valor_equipo = (
+        df_filtrado.groupby("equipo", as_index=False)["valor_mercado_usd"]
         .mean()
+        .sort_values("valor_mercado_usd", ascending=True)
     )
-    fig_line = px.line(
-        prom_periodo,
-        x="periodo",
-        y="calificacion",
-        color="materia",
-        markers=True,
-        color_discrete_sequence=px.colors.qualitative.Set3,
+    fig_valor = px.bar(
+        valor_equipo,
+        x="valor_mercado_usd",
+        y="equipo",
+        orientation="h",
+        color="valor_mercado_usd",
+        color_continuous_scale="Tealgrn",
     )
-    fig_line.update_layout(
-        xaxis_title="Periodo", yaxis_title="Calificación promedio",
-        legend_title="Materia",
+    fig_valor.update_layout(
+        xaxis_title="Valor de mercado promedio (USD)", yaxis_title="",
+        coloraxis_showscale=False,
     )
-    st.plotly_chart(fig_line, use_container_width=True)
+    st.plotly_chart(fig_valor, use_container_width=True)
 
 # ---------------------------------------------------------------------------
-# Fila 3: Dispersión horas de estudio vs calificación + Correlación
+# Fila 3: Dispersión edad vs valor de mercado + Correlación
 # ---------------------------------------------------------------------------
 c5, c6 = st.columns(2)
 
 with c5:
-    st.subheader("Horas de estudio vs. Calificación")
+    st.subheader("Edad vs. Valor de mercado")
     fig_scatter = px.scatter(
         df_filtrado,
-        x="horas_estudio_semanal",
-        y="calificacion",
-        color="genero",
-        size="asistencia_%",
-        hover_data=["nombre", "grado", "materia"],
-        trendline="ols",
-        opacity=0.6,
+        x="edad",
+        y="valor_mercado_usd",
+        color="posicion",
+        size="goles",
+        hover_data=["nombre", "equipo", "asistencias"],
+        opacity=0.65,
         color_discrete_sequence=px.colors.qualitative.Set2,
     )
     fig_scatter.update_layout(
-        xaxis_title="Horas de estudio semanales", yaxis_title="Calificación",
-        legend_title="Género",
+        xaxis_title="Edad", yaxis_title="Valor de mercado (USD)",
+        legend_title="Posición",
     )
     st.plotly_chart(fig_scatter, use_container_width=True)
 
 with c6:
     st.subheader("Correlación entre variables numéricas")
-    num_cols = ["calificacion", "asistencia_%", "horas_estudio_semanal"]
+    num_cols = [
+        "edad", "partidos_jugados", "minutos_jugados",
+        "goles", "asistencias", "valor_mercado_usd",
+    ]
     corr = df_filtrado[num_cols].corr()
     fig_heat = go.Figure(
         data=go.Heatmap(
@@ -292,16 +328,16 @@ with c6:
     st.plotly_chart(fig_heat, use_container_width=True)
 
 # ---------------------------------------------------------------------------
-# Fila 4: Composición por género + Sunburst grado/sección/materia
+# Fila 4: Composición por posición + Sunburst equipo/posición
 # ---------------------------------------------------------------------------
 c7, c8 = st.columns(2)
 
 with c7:
-    st.subheader("Distribución por género")
+    st.subheader("Distribución por posición")
     fig_pie = px.pie(
         df_filtrado,
-        names="genero",
-        color="genero",
+        names="posicion",
+        color="posicion",
         hole=0.45,
         color_discrete_sequence=px.colors.qualitative.Set2,
     )
@@ -309,24 +345,23 @@ with c7:
     st.plotly_chart(fig_pie, use_container_width=True)
 
 with c8:
-    st.subheader("Jerarquía: grado → sección → materia")
+    st.subheader("Jerarquía: equipo → posición")
     sunburst_df = (
-        df_filtrado.groupby(["grado", "seccion", "materia"], as_index=False)[
-            "calificacion"
+        df_filtrado.groupby(["equipo", "posicion"], as_index=False)[
+            "valor_mercado_usd"
         ].mean()
     )
     fig_sun = px.sunburst(
         sunburst_df,
-        path=["grado", "seccion", "materia"],
+        path=["equipo", "posicion"],
         values=None,
-        color="calificacion",
+        color="valor_mercado_usd",
         color_continuous_scale="RdYlGn",
-        range_color=[0, 5],
     )
     st.plotly_chart(fig_sun, use_container_width=True)
 
 st.markdown("---")
 st.caption(
     "Dashboard construido con Streamlit y Plotly · Datos generados de forma "
-    "sintética con fines demostrativos."
+    "sintética con fines demostrativos · Acceso protegido por clave."
 )
